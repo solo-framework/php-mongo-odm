@@ -1,0 +1,32 @@
+{
+	"name": "afi/mongodb-odm",
+	"description": "MongoDB ODM",
+
+	"keywords": ["mongodb","ODM"],
+	"homepage": "https://github.com/solo-framework/mongodb-odm",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Andrey Filippov",
+			"email": "afi.work@gmail.com",
+			"role": "Maintainer"
+		}
+	],
+
+	"require": {
+		"php": ">=8.0",
+		"mongodb/mongodb": "^1.11",
+		"ext-mongodb": "*"
+	},
+
+	"autoload": {
+		"psr-4": {
+			"RuntimeLLC\\Mongo\\": "src/",
+			"RuntimeLLC\\ODMTests\\Resources\\" : "tests/resourses/",
+			"RuntimeLLC\\ODMTests\\" : "tests/"
+		}
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^9"
+	}
+}

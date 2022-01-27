@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<phpunit
+	bootstrap="tests/bootstrap.php"
+    colors="true"
+    convertErrorsToExceptions="true"
+    convertNoticesToExceptions="true"
+    convertWarningsToExceptions="true"
+    processIsolation="false"
+    stopOnFailure="false"
+>
+	<php>
+		<!--
+
+		use odmtest
+		db.createUser({user: "odmtest", pwd: "odmtest", roles:["dbOwner"]})
+
+		-->
+		<var name="mongo.server" value='mongodb://odmtest:odmtest@192.168.11.50:27017/odmtest?authSource=odmtest&amp;authMechanism=SCRAM-SHA-1'/>
+		<var name="mongo.dbname" value="odmtest"/>
+	</php>
+
+	<logging>
+		<log type="coverage-html"
+		     target="./phpunit-log/codeCoverage"
+
+		     lowUpperBound="50"
+		     highLowerBound="80"/>
+		<log type="testdox-html" target="./phpunit-log/testdox.html" />
+	</logging>
+
+	<filter>
+		<whitelist>
+			<directory>src</directory>
+
+			<!--<exclude>-->
+				<!--<directory>src/apps/API/Action</directory>-->
+				<!--<file>src/apps/API/APIApplication.php</file>-->
+				<!--<file>src/apps/API/ApiResponse.php</file>-->
+				<!--<file>src/apps/API/Controller.php</file>-->
+				<!--<file>src/apps/API/ErrorException.php</file>-->
+				<!--<file>src/apps/API/CommonException.php</file>-->
+				<!--<file>src/apps/API/ValidationException.php</file>-->
+			<!--</exclude>-->
+		</whitelist>
+
+	</filter>
+
+
+	<testsuites>
+		<testsuite name="Mongo ODM test suite">
+			<directory>tests/</directory>
+		</testsuite>
+	</testsuites>
+</phpunit>
