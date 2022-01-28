@@ -34,13 +34,6 @@ abstract class EntityManager
 	 */
 	protected string $entityClassName;
 
-//	protected $typeMap = [
-//		'array' => 'array', //'MongoDB\Model\BSONArray',
-//		'document' => 'array',//'MongoDB\Model\BSONArray',//'MongoDB\Model\BSONDocument',
-//		'root' => null//'MongoDB\Model\BSONDocument',
-//	];
-
-
 	/**
 	 * Options for creating collection
 	 *
@@ -61,7 +54,7 @@ abstract class EntityManager
 
 		/** @var $inst Entity */
 		$inst = new $this->entityClassName;
-		//$this->typeMap["root"] = $this->entityClassName;
+
 		$this->typeMap = $inst->getTypeMap();
 		$this->collectionName = $inst->getCollectionName();
 

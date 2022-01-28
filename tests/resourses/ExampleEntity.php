@@ -19,7 +19,7 @@ class ExampleEntity extends Entity
 
 	public int $age = 0;
 
-	public Address $address;
+	public AddressEntity $address;
 
 
 	/**
@@ -40,7 +40,7 @@ class ExampleEntity extends Entity
 	public function getEntityRelations(): array
 	{
 		return [
-			"address" => ["type" => self::TYPE_ENTITY, "class" => Address::class]
+			"address" => ["type" => self::TYPE_ENTITY, "class" => AddressEntity::class]
 		];
 	}
 

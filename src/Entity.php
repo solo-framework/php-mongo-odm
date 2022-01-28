@@ -89,14 +89,10 @@ abstract class Entity implements Unserializable, Serializable
 	public function bsonUnserialize(array $data)
 	{
 		$ignored = $this->getIngoredFields();
-//		print_r($ignored);
-//
 		foreach ($ignored as $name => $val)
 		{
 			if ($val === false)
 			{
-//				print_r("\n DELETE {$name}\n");
-//				print_r($data);
 				unset($data[$name]);
 			}
 		}
@@ -114,8 +110,6 @@ abstract class Entity implements Unserializable, Serializable
 
 	public function bsonSerialize(): array
 	{
-		print_r("SERIALIZE\n");
-		throw new \Exception("bsonSerialize");
 		return (array)$this;
 	}
 }

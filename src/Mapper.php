@@ -58,24 +58,24 @@ class Mapper
 	 * @param mixed $data Данные
 	 * @param array $options Опции
 	 *
-	 * @return array|null
+	 * @return mixed
 	 */
 	private static function arrayToObjectRecurively(mixed $data, array $options): mixed
 	{
 		if ($options["type"] == Entity::TYPE_ENTITY || $options["type"] == Entity::TYPE_NOENTITY)
 		{
 			$object = new $options["class"];
-			$fieldMeta = [];
+			$relations = [];
 			if ($options["type"] == Entity::TYPE_ENTITY)
-				$fieldMeta = $object->getEntityRelations();
+				$relations = $object->getEntityRelations();
 
 			foreach ($data as $name => $value)
 			{
 				if (property_exists($object, $name))
 				{
-					if (is_array($value) && isset($fieldMeta[$name]))
+					if (is_array($value) && isset($relations[$name]))
 					{
-						$object->$name = self::arrayToObjectRecurively($value, $fieldMeta[$name]);
+						$object->$name = self::arrayToObjectRecurively($value, $relations[$name]);
 					}
 					else
 					{

@@ -10,12 +10,12 @@
 
 namespace RuntimeLLC\ODMTests\Resources;
 
-class LoloManager extends BaseTestManager
+class RootManager extends BaseTestManager
 {
 
 	public function getEntityClassName(): string
 	{
-		return Lolo::class;
+		return RootEntity::class;
 	}
 }
 

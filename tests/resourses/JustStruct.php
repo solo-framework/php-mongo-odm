@@ -10,10 +10,10 @@
 
 namespace RuntimeLLC\ODMTests\Resources;
 
-class NoEntity
+class JustStruct
 {
-	public string $noName = "";
+	public string $status = "";
 
-	public mixed $param = null;
+	public mixed $data = null;
 }
 

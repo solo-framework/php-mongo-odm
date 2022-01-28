@@ -12,11 +12,13 @@ namespace RuntimeLLC\ODMTests\Resources;
 
 use RuntimeLLC\Mongo\Entity;
 
-class Org extends Entity
+class OrgEntity extends Entity
 {
-	public $inn = null;
+	public string|null $inn = null;
 
-	public $ogrn = null;
+	public string|null $ogrn = null;
+
+	public ?AddressEntity $address = null;
 
 	public function getCollectionName(): ?string
 	{
@@ -24,6 +26,13 @@ class Org extends Entity
 	}
 
 	public function getEntityRelations(): array
+	{
+		return [
+			"address" => ["type" => self::TYPE_ENTITY, "class" => AddressEntity::class]
+		];
+	}
+
+	public function getIngoredFields(): array
 	{
 		return [];
 	}

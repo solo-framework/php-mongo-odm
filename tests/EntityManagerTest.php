@@ -9,32 +9,23 @@
  */
 
 namespace RuntimeLLC\ODMTests;
-
-//use ODMTests\Entity\ODMAddress;
-//use ODMTests\Entity\ODMOrg;
-//use ODMTests\Entity\ODMTest;
-//use ODMTests\Entity\ODMUser;
-//use ODMTests\ODMTestManager;
 use DateTime;
 use DateTimeInterface;
 use Exception;
+use JetBrains\PhpStorm\Pure;
 use MongoDB\BSON\ObjectId;
-use MongoDB\BSON\Timestamp;
 use MongoDB\BSON\UTCDateTime;
-use MongoDB\Exception\InvalidArgumentException;
 use PHPUnit\Framework\TestCase;
 use RuntimeLLC\Mongo\EntityManager;
-use RuntimeLLC\ODMTests\Resources\Address;
+use RuntimeLLC\ODMTests\Resources\AddressEntity;
 use RuntimeLLC\ODMTests\Resources\BadManager;
-use RuntimeLLC\ODMTests\Resources\ExampleEntity;
 use RuntimeLLC\ODMTests\Resources\ExampleManager;
-use RuntimeLLC\ODMTests\Resources\Lolo;
-use RuntimeLLC\ODMTests\Resources\LoloManager;
-use RuntimeLLC\ODMTests\Resources\NoEntity;
-use RuntimeLLC\ODMTests\Resources\Org;
+use RuntimeLLC\ODMTests\Resources\JustStruct;
+use RuntimeLLC\ODMTests\Resources\OrgEntity;
 use RuntimeLLC\ODMTests\Resources\PersonEntity;
 use RuntimeLLC\ODMTests\Resources\PersonManager;
-use function MongoDB\BSON\toPHP;
+use RuntimeLLC\ODMTests\Resources\RootEntity;
+use RuntimeLLC\ODMTests\Resources\RootManager;
 
 class EntityManagerTest extends TestCase
 {
@@ -71,10 +62,94 @@ class EntityManagerTest extends TestCase
 		return $this->pm->save($ent);
 	}
 
+	#[Pure] private function newComplex(): RootEntity
+	{
+		$root = new RootEntity();
+		$root->name = "RootEntity";
+		$root->year = "2000";
+
+		for($i = 0; $i < 3; $i++)
+		{
+			$org = new OrgEntity();
+			$org->inn = "1234567890{$i}";
+			$org->ogrn = "999999999{$i}";
+
+			$address = new AddressEntity();
+			$address->building = "1{$i}";
+			$address->street = "John Lennon";
+
+			$struct = new JustStruct();
+			$struct->data = ["param" => "param{$i}", "value" => $i];
+			$struct->status = "STATUS_{$i}";
+
+			$address->someStruct = $struct;
+			$org->address = $address;
+			$root->orgs[] = $org;
+		}
+
+		return $root;
+	}
+
+	private function createComplex(): RootEntity
+	{
+		$rm = new RootManager();
+		return $rm->save($this->newComplex());
+	}
+
 	protected function tearDown(): void
 	{
 		$this->manager->getClient()->getDatabase()->dropCollection("odm_person");
 		$this->manager->getClient()->getDatabase()->dropCollection("odm_example");
+		$this->manager->getClient()->getDatabase()->dropCollection("root_collection");
+	}
+
+
+	public function testSaveExt()
+	{
+		$root = $this->newComplex();
+		$saved = $this->createComplex();
+
+		$testStruct = new JustStruct();
+		$testStruct->status = "STATUS_1";
+		$testStruct->data = ["param" => "param1", "value" => 1];
+
+		// TEST
+		$this->assertEquals("9999999991", $saved->orgs[1]->ogrn);
+		$this->assertEquals(null, $saved->orgs[1]->id);
+		$this->assertEquals(
+			$testStruct,
+			$saved->orgs[1]->address->someStruct
+		);
+
+
+		// remove for comparsion
+		$saved->id = null;
+		$this->assertEquals($root, $saved);
+	}
+
+	public function testFindOneExt()
+	{
+		$created = $this->createComplex();
+
+		$rm = new RootManager();
+		// db.getCollection('root_collection').find({"orgs": {"$elemMatch":  {"ogrn": "9999999991"}}})
+		$saved = $rm->findOne(['orgs' => ['$elemMatch' => ['ogrn' => '9999999991']]]);
+		// TEST
+		$this->assertEquals($created, $saved);
+	}
+
+	public function testUpdateBySaveExt()
+	{
+		$new = $this->createComplex();
+		$new->orgs[0]->address->building = "44";
+		$new->orgs[1]->address->someStruct->status = "NEW_STATUS";
+
+		$rm = new RootManager();
+		$updated = $rm->save($new);
+
+		$saved = $rm->findById($new->id);
+		// TEST
+		$this->assertEquals($updated, $saved);
 	}
 
 	public function testGetCollection()
@@ -254,9 +329,8 @@ class EntityManagerTest extends TestCase
 
 		$res = $this->pm->findOne(["name" => "Anna"]);
 
+		// TEST
 		$this->assertTrue($res instanceof PersonEntity);
-		echo "Расширить тест для проверки вложенных сущностей!!!!!!!!!!!!!!!!!!!!!!!!";
-//		$this->assertEquals(PersonEntity::class, get_class($res));
 	}
 
 	public function testCount()
@@ -267,7 +341,6 @@ class EntityManagerTest extends TestCase
 		$res = $this->pm->count(["name" => "Anna"]);
 
 		$this->assertEquals(2, $res);
-//		$this->assertEquals(PersonEntity::class, get_class($res));
 	}
 
 	public function testBuildObjectIdList()
@@ -304,6 +377,9 @@ class EntityManagerTest extends TestCase
 		$this->assertNull($res);
 	}
 
+	/**
+	 * @throws Exception
+	 */
 	public function testFetchColumn()
 	{
 		$this->createPerson(name: "Alice", age: 32);
@@ -329,6 +405,9 @@ class EntityManagerTest extends TestCase
 		$this->pm->fetchColumn([], "");
 	}
 
+	/**
+	 * @throws Exception
+	 */
 	public function testFetchPartEntity()
 	{
 		$this->createPerson(name: "Petr");
@@ -346,6 +425,9 @@ class EntityManagerTest extends TestCase
 		$this->assertNull($part);
 	}
 
+	/**
+	 * @throws Exception
+	 */
 	public function testFindOneAndReplace()
 	{
 		$this->createPerson(name: "Petr");
@@ -370,6 +452,9 @@ class EntityManagerTest extends TestCase
 
 	}
 
+	/**
+	 * @throws Exception
+	 */
 	public function testFindOneAndUpdate()
 	{
 		$this->createPerson(name: "Petr");
@@ -507,7 +592,7 @@ class EntityManagerTest extends TestCase
 //		$saved->
 //		var_dump($saved->current());
 //		var_dump(iterator_to_array($saved));
-		/** @var $item ExampleEntity */
+//		/** @var $item ExampleEntity */
 //		foreach ($saved as $item)
 //		{
 ////			var_dump($item->);
@@ -815,4 +900,5 @@ class EntityManagerTest extends TestCase
 //			$c++;
 //		}
 //	}
+
 }
