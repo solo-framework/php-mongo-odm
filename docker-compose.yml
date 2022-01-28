@@ -1,0 +1,9 @@
+version: '3.6'
+services:
+    db:
+        image: mongo:3.4
+        container_name: mongoodm8-db-34
+        ports:
+            - "27017:27017"
+        volumes:
+            - ./mongodb3.4-data:/data/db

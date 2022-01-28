@@ -18,13 +18,7 @@
     </report>
   </coverage>
   <php>
-    <!--
-
-		use odmtest
-		db.createUser({user: "odmtest", pwd: "odmtest", roles:["dbOwner"]})
-
-		-->
-    <var name="mongo.server" value="mongodb://user:user_password@192.168.1.112:27017/test_db?authSource=test_db&amp;authMechanism=SCRAM-SHA-1"/>
+    <var name="mongo.server" value="mongodb://192.168.1.112:27017/test_db"/>
     <var name="mongo.dbname" value="test_db"/>
   </php>
   <logging>

@@ -1,0 +1,9 @@
+version: '3.6'
+services:
+    db:
+        image: mongo:5.0.5
+        container_name: mongoodm8-db-505
+        ports:
+            - "27017:27017"
+        volumes:
+            - ./mongodb-data5.0.5:/data/db

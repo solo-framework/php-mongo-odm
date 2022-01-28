@@ -1,43 +1,42 @@
-# php-mongo-odm
+# php-mongo-odm8
 
-Библиотека для простых CRUD методов. Требует php7. 
+Библиотека для простых CRUD методов. Требует PHP 8 с расширением mongodb
 
-## Установка и запуск
+### Запуск тестов
 
-Для запуска тестов и разработки требуется php7 с расширением mongo
+### Сборка контейнера с PHP 8
 
-### Сборка docker-контейнера с php7
+```./build-php8.0-ubuntu.sh```
 
-https://github.com/solo-framework/docker-php7
-
-Если используете PhpStorm, то настроить интерпретатор php, указав собранный контейнер:
-
-![Alt text](interpreter.png?raw=true "Title")
-
-Для выполнения команд в контейнере, нужно использовать скрипт *./run-in-container.sh*
-
+Зайти в контейнер можно скриптом
+```shell
+./run-in-container.sh
+```
 
 ### Установка пакетов Composer
 ```
-./run-in-container.sh 'cd /app && composer install'
+./run-in-container.sh 
+cd /app && composer install
 ```
 
 ### Запуск тестов
+```shell
+./run-in-container.sh
+XDEBUG_MODE=coverage ./vendor/bin/phpunit
+```
 
 Перед запуском тестов нужно отредактировать значения переменных **mongo.server** и **mongo.dbname**
 в файле **phpunit.xml**
 
-У вас должен быть запущен сервер mongodb с БД для тестов
+Также должен быть запущен сервер mongodb с БД для тестов
 
-Пример создания пользователя:
-
-```
-use odmtest
-db.createUser({user: "odmtest", pwd: "odmtest", roles:["dbOwner"]})
+Для версии mongodb 3.4
+```shell
+docker-composer up
 ```
 
-Запуск юнит-тестов:
+Для версии mongodb 5.0.5
+```shell
+docker-compose -f ./docker-compose-mongodb-5.0.yml up
+```
 
-```
-./run-in-container.sh 'cd /app && vendor/bin/phpunit'
-```
