@@ -1,9 +1,9 @@
 {
-	"name": "afi/mongodb-odm",
+	"name": "afi/php-mongo-odm",
 	"description": "MongoDB ODM",
 
 	"keywords": ["mongodb","ODM"],
-	"homepage": "https://github.com/solo-framework/mongodb-odm",
+	"homepage": "https://github.com/solo-framework/php-mongo-odm",
 	"license": "MIT",
 	"authors": [
 		{

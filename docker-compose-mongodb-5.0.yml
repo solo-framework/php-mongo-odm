@@ -6,4 +6,4 @@ services:
         ports:
             - "27017:27017"
         volumes:
-            - ./mongodb-data5.0.5:/data/db
+            - ./mongodb5.0.5-data:/data/db

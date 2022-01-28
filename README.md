@@ -1,4 +1,4 @@
-# php-mongo-odm8
+# php-mongo-odm
 
 Библиотека для простых CRUD методов. Требует PHP 8 с расширением mongodb
 
