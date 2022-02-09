@@ -230,12 +230,14 @@ abstract class EntityManager
 	 * @param $filter
 	 * @param array $options
 	 *
-	 * @return Entity
+	 * @return Entity|null
 	 */
-	public function findOne($filter, array $options = []): Entity
+	public function findOne($filter, array $options = []): ?Entity
 	{
 		$options["typeMap"] = $this->typeMap;
 		$res = $this->collection->findOne($filter, $options);
+		if ($res == null)
+			return null;
 		$mapper = new Mapper($res, $this->entityClassName);
 		return $mapper->convert();
 	}

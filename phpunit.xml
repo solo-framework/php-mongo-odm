@@ -18,7 +18,7 @@
     </report>
   </coverage>
   <php>
-    <var name="mongo.server" value="mongodb://192.168.1.112:27017/test_db"/>
+    <var name="mongo.server" value="mongodb://192.168.1.112:27117/test_db"/>
     <var name="mongo.dbname" value="test_db"/>
   </php>
   <logging>

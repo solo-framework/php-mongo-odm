@@ -24,19 +24,12 @@ class Mapper
 	/**
 	 * Выполнить мапинг
 	 *
-	 * @return Entity
+	 * @return Entity|null
 	 */
-	public function convert() : Entity
+	public function convert() : ?Entity
 	{
-//		if (is_a($this->doc, Entity::class))
-//			return $this->doc;
-
-//		print_r("\n!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
-//		print_r($this->doc);
-//		print_r("seee\n");
-//		var_dump(is_a($this->doc, Entity::class));
-//		print_r(get_class($this->doc));
-//		print_r("\n!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
+		if ($this->doc == null)
+			return null;
 
 		if (!is_a($this->doc, Entity::class))
 		{
@@ -44,11 +37,8 @@ class Mapper
 			unset($this->doc["_id"]);
 		}
 
-
-
 		$obj = self::arrayToObjectRecurively($this->doc, ["type" => Entity::TYPE_ENTITY, "class" => $this->className]);
 //		$obj->id = $id;
-
 		return $obj;
 	}
 

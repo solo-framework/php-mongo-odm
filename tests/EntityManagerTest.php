@@ -16,6 +16,7 @@ use JetBrains\PhpStorm\Pure;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use PHPUnit\Framework\TestCase;
+use RuntimeLLC\Mongo\DataSet;
 use RuntimeLLC\Mongo\EntityManager;
 use RuntimeLLC\ODMTests\Resources\AddressEntity;
 use RuntimeLLC\ODMTests\Resources\BadManager;
@@ -283,6 +284,15 @@ class EntityManagerTest extends TestCase
 		$this->assertCount(0, $stored->getValues());
 	}
 
+	public function testFindNotFound() : void
+	{
+		$stored = $this->pm->find(["name" => "not_existing"]);
+
+		// TEST
+		$this->assertTrue($stored instanceof DataSet);
+		$this->assertEquals([], $stored->getValues());
+	}
+
 	public function testUpdateById() : void
 	{
 		$person = $this->createPerson(age: 100);
@@ -333,6 +343,14 @@ class EntityManagerTest extends TestCase
 		$this->assertTrue($res instanceof PersonEntity);
 	}
 
+	public function testFindOneNotFound()
+	{
+		$saved = $this->pm->findOne(["name" => "NotFound"]);
+		// TEST
+		$this->assertNull($saved, "Entity must be NULL");
+	}
+
+
 	public function testCount()
 	{
 		$this->createPerson(name: "Anna", age: 30);
@@ -375,6 +393,10 @@ class EntityManagerTest extends TestCase
 		$res = $this->pm->fetchField(["age" => 1000], "non_exists_field");
 		// TEST
 		$this->assertNull($res);
+
+		$name = $this->pm->fetchField(["name" => "NotFoundName"], "name");
+		// TEST
+		$this->assertNull($name);
 	}
 
 	/**
