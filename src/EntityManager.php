@@ -13,6 +13,7 @@ namespace RuntimeLLC\Mongo;
 use MongoDB\BSON\ObjectId;
 use MongoDB\Collection;
 use MongoDB\DeleteResult;
+use MongoDB\Driver\Cursor;
 use MongoDB\Operation\FindOneAndUpdate;
 use MongoDB\UpdateResult;
 use RuntimeException;
@@ -60,7 +61,8 @@ abstract class EntityManager
 
 		if ($this->collectionName)
 		{
-			$opts = $this->getCollectionOptions() + $collectionOptions;
+//			$opts = $this->getCollectionOptions() + $collectionOptions;
+			$opts = $collectionOptions;
 			$this->collection = $this->getClient()->getDatabase()->selectCollection($this->collectionName, $opts);
 		}
 	}
@@ -374,7 +376,8 @@ abstract class EntityManager
 	{
 		$opts = [
 			"upsert" => false,
-			"returnDocument" => FindOneAndUpdate::RETURN_DOCUMENT_AFTER
+			"returnDocument" => FindOneAndUpdate::RETURN_DOCUMENT_AFTER,
+			"typeMap" => $this->typeMap
 		] + $options;
 
 		$res = $this->collection->findOneAndUpdate($filter, $update, $opts);
@@ -407,6 +410,19 @@ abstract class EntityManager
 
 		$mapper = new Mapper($res, $this->entityClassName);
 		return $mapper->convert();
+	}
+
+	/**
+	 * Вспомогательный метод. Сделан чтобы показать тип возвращаемых данных
+	 *
+	 * @param $pipeline
+	 * @param array $options
+	 *
+	 * @return Cursor|\Traversable
+	 */
+	public function aggregate($pipeline, array $options=[]) : Cursor|\Traversable
+	{
+		return $this->getCollection()->aggregate($pipeline, $options);
 	}
 }
 
