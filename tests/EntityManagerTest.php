@@ -13,14 +13,19 @@ use DateTime;
 use DateTimeInterface;
 use Exception;
 use JetBrains\PhpStorm\Pure;
+use MongoDB\BSON\Javascript;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
+use MongoDB\Driver\Command;
+use MongoDB\Driver\Cursor;
+use MongoDB\Model\BSONDocument;
 use PHPUnit\Framework\TestCase;
 use RuntimeLLC\Mongo\DataSet;
 use RuntimeLLC\Mongo\EntityManager;
 use RuntimeLLC\ODMTests\Resources\AddressEntity;
 use RuntimeLLC\ODMTests\Resources\BadManager;
 use RuntimeLLC\ODMTests\Resources\ExampleManager;
+use RuntimeLLC\ODMTests\Resources\FinManager;
 use RuntimeLLC\ODMTests\Resources\JustStruct;
 use RuntimeLLC\ODMTests\Resources\OrgEntity;
 use RuntimeLLC\ODMTests\Resources\PersonEntity;
@@ -39,7 +44,14 @@ class EntityManagerTest extends TestCase
 	{
 		$this->manager = new ExampleManager();
 		$this->pm = new PersonManager();
-//		$this->person = $this->createPerson();
+
+		// load js code
+		$initCodeSrc = file_get_contents("./tests/db.js");
+		$code = new Javascript($initCodeSrc);
+		$this->pm->getClient()->getManager()->executeCommand(
+			$GLOBALS["mongo.dbname"],
+			new Command(["eval" => $code])
+		);
 	}
 
 	/**
@@ -102,8 +114,55 @@ class EntityManagerTest extends TestCase
 		$this->manager->getClient()->getDatabase()->dropCollection("odm_person");
 		$this->manager->getClient()->getDatabase()->dropCollection("odm_example");
 		$this->manager->getClient()->getDatabase()->dropCollection("root_collection");
+		$this->manager->getClient()->getDatabase()->dropCollection("payment");
 	}
 
+	public function testAggregate()
+	{
+		$pipeline = [
+			// все платежи пользователя за текущий месяц
+			['$match' => [
+				"providerId" => ["\$in" => ["1144"]],
+				"status" => "SUCCEED",
+				"createDate" => ["\$gte" => 1644475000]
+			]],
+
+			['$project' => [
+				"amount"=> true,
+				"count" => ['$add' => [1]]
+			]],
+
+			['$group' => [
+				'_id' => null,
+				'total' => ['$sum' => '$count'],
+				'amount' => ['$sum' => '$amount'],
+			]],
+		];
+
+		$fm = new FinManager();
+
+		// Можно так
+		$res = $fm->aggregate($pipeline);
+		// TEST
+		$this->assertNotNull($res);
+		$this->assertInstanceOf(Cursor::class, $res);
+
+		$data = $res->toArray();
+		$this->assertCount(1, $data);
+		$this->assertTrue($data[0] instanceof BSONDocument);
+		$this->assertEquals(10, $data[0]["amount"]);
+
+		// а можно и так
+		$res = $fm->getCollection()->aggregate($pipeline);
+
+		$this->assertNotNull($res);
+
+		$this->assertInstanceOf(Cursor::class, $res);
+		$data = $res->toArray();
+		$this->assertCount(1, $data);
+		$this->assertTrue($data[0] instanceof BSONDocument);
+		$this->assertEquals(10, $data[0]["amount"]);
+	}
 
 	public function testSaveExt()
 	{
@@ -137,6 +196,7 @@ class EntityManagerTest extends TestCase
 		$saved = $rm->findOne(['orgs' => ['$elemMatch' => ['ogrn' => '9999999991']]]);
 		// TEST
 		$this->assertEquals($created, $saved);
+		$this->assertInstanceOf(RootEntity::class, $saved);
 	}
 
 	public function testUpdateBySaveExt()
@@ -151,6 +211,7 @@ class EntityManagerTest extends TestCase
 		$saved = $rm->findById($new->id);
 		// TEST
 		$this->assertEquals($updated, $saved);
+		$this->assertInstanceOf(RootEntity::class, $saved);
 	}
 
 	public function testGetCollection()
@@ -213,6 +274,7 @@ class EntityManagerTest extends TestCase
 
 		// TEST
 		$this->assertNotNull($saved);
+		$this->assertInstanceOf(PersonEntity::class, $saved);
 
 		// MongoDB saves Date in UTC timezone
 		$dt->setTimezone(new \DateTimeZone("Etc/UCT"));
@@ -250,6 +312,8 @@ class EntityManagerTest extends TestCase
 		/** @var $person PersonEntity */
 		$person = $this->pm->findById($saved->id);
 
+		$this->assertInstanceOf(PersonEntity::class, $person);
+		$this->assertInstanceOf(PersonEntity::class, $savedAgain);
 		$this->assertEquals($savedAgain->id, $savedAgain->id);
 		$this->assertEquals($savedAgain->age, $person->age);
 		$this->assertEquals($saved->id, $person->id);
@@ -311,6 +375,7 @@ class EntityManagerTest extends TestCase
 		$this->assertNotNull($stored);
 		$this->assertEquals("Mary", $stored->name);
 		$this->assertEquals(101, $stored->age);
+		$this->assertInstanceOf(PersonEntity::class, $stored);
 	}
 
 	public function testUpdate()
@@ -328,6 +393,7 @@ class EntityManagerTest extends TestCase
 		// TEST
 		foreach ($persons as $person)
 		{
+			$this->assertInstanceOf(PersonEntity::class, $person);
 			$this->assertEquals(55, $person->age);
 		}
 	}
@@ -341,6 +407,7 @@ class EntityManagerTest extends TestCase
 
 		// TEST
 		$this->assertTrue($res instanceof PersonEntity);
+		$this->assertInstanceOf(PersonEntity::class, $res);
 	}
 
 	public function testFindOneNotFound()
@@ -435,6 +502,8 @@ class EntityManagerTest extends TestCase
 		$this->createPerson(name: "Petr");
 		$part = $this->pm->fetchPartEntity(["name" => "Petr"], ["age", "password"]);
 
+		$this->assertInstanceOf(PersonEntity::class, $part);
+
 		// TEST
 		$this->assertEquals([], $part->ints, "ints must be []");
 		$this->assertEquals(null, $part->date, "date must be null");
@@ -488,6 +557,7 @@ class EntityManagerTest extends TestCase
 		$this->assertEquals("Carl", $saved->name);
 		$this->assertEquals(111, $saved->age);
 		$this->assertEquals([1, 2], $saved->ints, "ints must be []");
+		$this->assertInstanceOf(PersonEntity::class, $saved);
 
 		// No document found
 		$saved = $this->pm->findOneAndUpdate(
