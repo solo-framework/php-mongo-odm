@@ -36,10 +36,10 @@ abstract class Entity implements Unserializable, Serializable
 
 	/**
 	 * Идентификатор сущности
-	 *
+	 * REFACTORING: после нужно вернуть тип public ObjectId|null
 	 * @var ObjectId|null
 	 */
-	public ObjectId|null $id = null;
+	public mixed $id = null;
 
 
 	/**
