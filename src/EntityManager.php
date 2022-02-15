@@ -223,7 +223,7 @@ abstract class EntityManager
 	{
 		$options["typeMap"] = $this->typeMap;
 		$cursor = $this->collection->find($filter, $options);
-		return new DataSet($cursor);
+		return new DataSet($cursor, $this->entityClassName);
 	}
 
 	/**

@@ -117,6 +117,20 @@ class EntityManagerTest extends TestCase
 		$this->manager->getClient()->getDatabase()->dropCollection("payment");
 	}
 
+	public function testTYPE_ARRAY_ENTITIES()
+	{
+		$created = $this->createComplex();
+		$rm = new RootManager();
+		$dataSet = $rm->find([]);
+
+		/** @var $entity RootEntity */
+		$entity = $dataSet->getValues()[0];
+		foreach ($entity->orgs as $org)
+		{
+			$this->assertInstanceOf(OrgEntity::class, $org);
+		}
+	}
+
 	public function testAggregate()
 	{
 		$pipeline = [
