@@ -22,6 +22,7 @@ abstract class EntityManager
 {
 	protected array $typeMap;
 	protected string $collectionName;
+	protected Entity $instance;
 
 	/**
 	 * @var Collection
@@ -53,11 +54,9 @@ abstract class EntityManager
 		if (!$this->entityClassName)
 			throw new RuntimeException("You should define entity class name in getEntityClassName() for " . get_called_class());
 
-		/** @var $inst Entity */
-		$inst = new $this->entityClassName;
-
-		$this->typeMap = $inst->getTypeMap();
-		$this->collectionName = $inst->getCollectionName();
+		$this->instance = new $this->entityClassName;
+		$this->typeMap = $this->instance->getTypeMap();
+		$this->collectionName = $this->instance->getCollectionName();
 
 		if ($this->collectionName)
 		{
@@ -374,11 +373,11 @@ abstract class EntityManager
 	 */
 	public function findOneAndUpdate(array $filter, array $update, array $options = array()): ?Entity
 	{
-		$opts = [
+		$opts = $options + [
 			"upsert" => false,
 			"returnDocument" => FindOneAndUpdate::RETURN_DOCUMENT_AFTER,
-			"typeMap" => $this->typeMap
-		] + $options;
+			"typeMap" => $this->typeMap,
+		];
 
 		$res = $this->collection->findOneAndUpdate($filter, $update, $opts);
 		if ($res == null)
@@ -397,14 +396,15 @@ abstract class EntityManager
 	 *
 	 * @return Entity|null
 	 */
-	public function findOneAndReplace(array $filter, array $update, array $options = array()): ?Entity
+	public function findOneAndReplace(array $filter, array $replacement, array $options = array()): ?Entity
 	{
-		$opts = [
+		$opts = $options + [
 				"upsert" => false,
-				"returnDocument" => FindOneAndUpdate::RETURN_DOCUMENT_AFTER
-			] + $options;
+				"returnDocument" => FindOneAndUpdate::RETURN_DOCUMENT_AFTER,
+				"typeMap" => $this->typeMap
+			];
 
-		$res = $this->collection->findOneAndReplace($filter, $update, $opts);
+		$res = $this->collection->findOneAndReplace($filter, $replacement, $opts);
 		if ($res == null)
 			return null;
 

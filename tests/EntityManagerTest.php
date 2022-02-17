@@ -22,6 +22,8 @@ use MongoDB\Model\BSONDocument;
 use PHPUnit\Framework\TestCase;
 use RuntimeLLC\Mongo\DataSet;
 use RuntimeLLC\Mongo\EntityManager;
+use RuntimeLLC\Mongo\IEntityManager;
+use RuntimeLLC\Mongo\Mapper;
 use RuntimeLLC\ODMTests\Resources\AddressEntity;
 use RuntimeLLC\ODMTests\Resources\BadManager;
 use RuntimeLLC\ODMTests\Resources\ExampleManager;
@@ -63,7 +65,7 @@ class EntityManagerTest extends TestCase
 	 * @return PersonEntity
 	 * @throws Exception
 	 */
-	private function createPerson($name = "test name", $password="password", $ints=[1,2], $age = 33): PersonEntity{
+	private function createPerson($name = "test name", $password="password", $ints=[1,2], $age = 33, $needSave = true): PersonEntity{
 		$dt = new DateTime("now", new \DateTimeZone("America/Detroit"));
 		$ent = new PersonEntity();
 		$ent->ignoreField = [1, 2, 3];
@@ -72,7 +74,10 @@ class EntityManagerTest extends TestCase
 		$ent->date = new UTCDateTime($dt);
 		$ent->ints = $ints;
 		$ent->age = $age;
-		return $this->pm->save($ent);
+		if ($needSave)
+			return $this->pm->save($ent);
+		else
+			return $ent;
 	}
 
 	#[Pure] private function newComplex(): RootEntity
@@ -114,7 +119,7 @@ class EntityManagerTest extends TestCase
 		$this->manager->getClient()->getDatabase()->dropCollection("odm_person");
 		$this->manager->getClient()->getDatabase()->dropCollection("odm_example");
 		$this->manager->getClient()->getDatabase()->dropCollection("root_collection");
-		$this->manager->getClient()->getDatabase()->dropCollection("payment");
+		$this->manager->getClient()->getDatabase()->dropCollection("fin");
 	}
 
 	public function testTYPE_ARRAY_ENTITIES()
@@ -245,6 +250,25 @@ class EntityManagerTest extends TestCase
 		$strId = "5cb6cf1440f72c0001746242";
 		$saved = $this->manager->findById($strId);
 		$this->assertNull($saved);
+	}
+
+	public function testMapper()
+	{
+		$m = new Mapper(null, "some class name");
+		$res = $m->convert();
+		$this->assertNull($res);
+	}
+
+	public function testCursor()
+	{
+		$dataset = $this->pm->find(["no_found" =>"no_value"]);
+		$cursor = $dataset->getCursor();
+
+		// TEST
+		$this->assertNotNull($cursor);
+		$this->assertInstanceOf(Cursor::class, $cursor);
+		$this->assertNull($dataset->current());
+		$this->assertNull($dataset->key());
 	}
 
 	public function testSave()
@@ -537,15 +561,21 @@ class EntityManagerTest extends TestCase
 	{
 		$this->createPerson(name: "Petr");
 
-		// Replaces the whole documents
+		// Replaces the whole (!!!) documents
 		$saved = $this->pm->findOneAndReplace(
 			["name" => "Petr"],
 			["age" => 222, "name" => "Carl II"]
 		);
 
+		$this->assertInstanceOf(PersonEntity::class, $saved);
+
+		// findOneAndReplace replaces the whole document...
 		$this->assertEquals("Carl II", $saved->name);
 		$this->assertEquals(222, $saved->age);
+
+		// ... so these fields are not exist now
 		$this->assertEquals([], $saved->ints, "ints must be []");
+		$this->assertNull($saved->password);
 
 		// No document found
 		$saved = $this->pm->findOneAndReplace(
@@ -557,6 +587,42 @@ class EntityManagerTest extends TestCase
 
 	}
 
+	public function testFindOneAndReplaceIgnoredFields()
+	{
+		$ent = $this->createPerson(name: "Petr III");
+
+		// Replaces the whole (!!!) documents
+		$saved = $this->pm->findOneAndReplace(
+			["name" => "Petr III"],
+			["ignoreField" => [5, 5, 5], "name" => $ent->name]
+		);
+
+		$this->assertInstanceOf(PersonEntity::class, $saved);
+
+		// В построенное сущности игнориуемые поля будут пустыми
+		$this->assertEquals([], $saved->ignoreField);
+
+		// но в БД они сохраняются. Нужно помнить об этом
+		// Рекомендуется удалять ненужные поля при подготовке запроса
+		$field = $this->pm->fetchField(["name" => $ent->name], "ignoreField");
+		$this->assertNotNull($field);
+		$this->assertEquals([5, 5, 5], $field);
+	}
+
+	public function testFindOneAndReplaceFail()
+	{
+		$this->expectException(exception: \MongoDB\Driver\Exception\InvalidArgumentException::class);
+		$this->expectErrorMessage('First key in $replacement argument is an update operator');
+
+		$this->createPerson(name: "Petr");
+
+		$saved = $this->pm->findOneAndReplace(
+			["name" => "Petr"],
+			['$set' => ["age" => 111, "name" => "Carl"]] // we must not use update operators like $set here
+		);
+	}
+
+
 	/**
 	 * @throws Exception
 	 */
@@ -565,6 +631,7 @@ class EntityManagerTest extends TestCase
 		$this->createPerson(name: "Petr");
 		$saved = $this->pm->findOneAndUpdate(
 			["name" => "Petr"],
+			// https://docs.mongodb.com/manual/reference/operator/update/
 			['$set' => ["age" => 111, "name" => "Carl"]]
 		);
 
@@ -580,6 +647,56 @@ class EntityManagerTest extends TestCase
 		);
 
 		$this->assertNull($saved);
+	}
+
+	public function testFindOneAndUpdateWithUpsertFalse()
+	{
+		$ent = $this->createPerson(needSave: false);
+		$new = $this->pm->findOneAndUpdate(
+			["name" => "not_existing_person"],
+			['$set' => ["age" => 777]],
+//			["upsert" => true] // По-умолчанию запись не создается
+		);
+		$this->assertNull($new);
+	}
+
+	public function testFindOneAndUpdateWithUpsertTrue()
+	{
+		$ent = $this->createPerson(age: 999, needSave: false);
+
+		$new = $this->pm->findOneAndUpdate(
+			["name" => "not_existing_person"],
+			['$set' => ["age" => 777]],
+			["upsert" => true] // Создадим запись
+		);
+
+		$this->assertInstanceOf(PersonEntity::class, $new);
+		$this->assertNotNull($new);
+
+		// Запись создается, но она не полная, только те поля, которые были в $set
+		// Например, поле password пустое
+		// Рекомендуется удалять ненужные поля при подготовке запроса
+		$this->assertNull($new->password);
+	}
+
+	public function testFindOneAndUpdateWithUpsertTrue2()
+	{
+		$ent = $this->createPerson(needSave: false);
+
+		$new = $this->pm->findOneAndUpdate(
+			["name" => "another_not_existing_person"],
+			['$set' => (array)$ent], // тут мы как будто решили записать все поля сразу
+			["upsert" => true] // создать запись
+		);
+
+		$this->assertNotNull($new);
+		$this->assertInstanceOf(PersonEntity::class, $new);
+
+		// Ингорируемые поля тоже запишутся. Нужно помнить об этом
+		$field = $this->pm->fetchField(["name" => $ent->name], "ignoreField");
+
+		$this->assertNotNull($field);
+		$this->assertEquals($ent->ignoreField, $field);
 	}
 
 	public function testFindOneAndUpdateFail()

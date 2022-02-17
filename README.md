@@ -22,7 +22,7 @@ cd /app && composer install
 ### Запуск тестов
 ```shell
 ./run-in-container.sh
-XDEBUG_MODE=coverage `./vendor/bin/phpunit`
+XDEBUG_MODE=coverage ./vendor/bin/phpunit
 ```
 
 Перед запуском тестов нужно отредактировать значения переменных **mongo.server** и **mongo.dbname**
