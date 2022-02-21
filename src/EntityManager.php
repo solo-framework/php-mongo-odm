@@ -138,6 +138,7 @@ abstract class EntityManager
 		{
 			$id = new ObjectId($doc["id"]);
 			unset($doc["id"]);
+			$options["upsert"] = true;
 			$this->collection->updateOne(["_id" => $id], ['$set' => $doc], $options);
 		}
 

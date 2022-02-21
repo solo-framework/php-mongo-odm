@@ -358,6 +358,32 @@ class EntityManagerTest extends TestCase
 		$this->assertEquals($saved->name, $person->name);
 	}
 
+	public function testUpdateBySave2()
+	{
+		// Сущность уже имеет ID, но не была ранее сохранена
+		$saved = $this->createPerson(name: "update2", needSave: false);
+		$saved->id = new ObjectId();
+
+		// Update field
+		$saved->age = 500;
+		$saved->name = "after update2";
+
+		/** @var $savedAgain PersonEntity */
+		$savedAgain = $this->pm->save($saved);
+
+		/** @var $person PersonEntity */
+		$person = $this->pm->findById($saved->id);
+
+		$this->assertNotNull($person, "Entity not found");
+		$this->assertInstanceOf(PersonEntity::class, $person);
+		$this->assertInstanceOf(PersonEntity::class, $savedAgain);
+		$this->assertEquals($savedAgain->id, $savedAgain->id);
+		$this->assertEquals($savedAgain->age, $person->age);
+		$this->assertEquals($saved->id, $person->id);
+		$this->assertEquals($saved->name, $person->name);
+	}
+
+
 	/**
 	 * @throws Exception
 	 */
