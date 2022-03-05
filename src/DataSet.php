@@ -28,7 +28,7 @@ class DataSet implements \Iterator
 		return $this->cursor;
 	}
 
-	public function current()
+	public function current(): mixed
 	{
 		$doc = $this->cursor->current();
 		if (is_null($doc))
@@ -47,12 +47,12 @@ class DataSet implements \Iterator
 		}
 	}
 
-	public function next()
+	public function next(): void
 	{
 		$this->cursor->next();
 	}
 
-	public function key()
+	public function key(): mixed
 	{
 		return $this->cursor->key();
 	}
@@ -62,7 +62,7 @@ class DataSet implements \Iterator
 		return $this->cursor->valid();
 	}
 
-	public function rewind()
+	public function rewind(): void
 	{
 		$this->cursor->rewind();
 	}
