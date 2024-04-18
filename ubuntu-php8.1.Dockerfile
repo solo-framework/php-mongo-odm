@@ -1,4 +1,4 @@
-FROM ubuntu:21.10
+FROM ubuntu:23.04
 
 ENV TZ=Europe/Moscow
 

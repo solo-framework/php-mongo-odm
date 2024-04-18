@@ -5,9 +5,10 @@
 # docker run --rm -it -v $(pwd):/app php8.1-afi-ubuntu  "$@"
 
 if [[ "$1" = "" ]];then
-	echo "Using $0 php8.0 | php8.1"
+	echo "Using $0 <image name>"
 	exit 1
 fi
 
-IMAGE="${1}-afi-ubuntu"
+# IMAGE="${1}-afi-ubuntu"
+IMAGE="${1}"
 docker run --rm -it -v $(pwd):/app "$IMAGE" "${@:2}"

@@ -4,3 +4,4 @@ phpunit-log/
 .phpunit.result.cache
 mongodb5.0.5-data/
 mongodb3.4-data/
+mongodb3.6-data/

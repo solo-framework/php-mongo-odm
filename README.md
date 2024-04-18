@@ -1,28 +1,29 @@
 # php-mongo-odm
 
 Библиотека для простых CRUD методов. Требует PHP 8 с расширением mongodb
+Пока протестировано только для php8.0, php8.1 и mongodb 3.6 
 
-### Запуск тестов
+### Сборка контейнера с PHP 8.1
 
-### Сборка контейнера с PHP 8
+Для версии 8.0 выполнять аналогичные команды 
 
-```./build-php8.0-ubuntu.sh```
+```shell
+./build-php8.1-bullseye.sh
+```
 
 Зайти в контейнер можно скриптом
 ```shell
-./run-in-container.sh
+./run-in-container.sh php8.1-cli-bullseye bash
 ```
 
 ### Установка пакетов Composer
 ```
-./run-in-container.sh 
-cd /app && composer install
+./run-in-container.sh php8.1-cli-bullseye bash -c "cd /app && composer install"
 ```
 
 ### Запуск тестов
 ```shell
-./run-in-container.sh
-XDEBUG_MODE=coverage ./vendor/bin/phpunit
+./run-in-container.sh php8.1-cli-bullseye bash -c "cd /app && XDEBUG_MODE=coverage ./vendor/bin/phpunit"
 ```
 
 Перед запуском тестов нужно отредактировать значения переменных **mongo.server** и **mongo.dbname**
@@ -30,13 +31,9 @@ XDEBUG_MODE=coverage ./vendor/bin/phpunit
 
 Также должен быть запущен сервер mongodb с БД для тестов
 
-Для версии mongodb 3.4
+Например, для версии mongodb 3.6
 ```shell
-docker-composer up
+docker compose -f ./docker-compose-mongodb-3.6.yml up
 ```
 
-Для версии mongodb 5.0.5
-```shell
-docker-compose -f ./docker-compose-mongodb-5.0.yml up
-```
-
+Для других версий аналогично

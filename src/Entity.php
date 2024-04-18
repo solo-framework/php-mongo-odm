@@ -86,7 +86,7 @@ abstract class Entity implements Unserializable, Serializable
 	 *
 	 * @param array $data Properties within the BSON array or document.
 	 */
-	public function bsonUnserialize(array $data)
+	public function bsonUnserialize(array $data): void
 	{
 		$ignored = $this->getIngoredFields();
 		foreach ($ignored as $name => $val)

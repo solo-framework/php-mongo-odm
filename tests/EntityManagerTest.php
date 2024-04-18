@@ -22,7 +22,6 @@ use MongoDB\Model\BSONDocument;
 use PHPUnit\Framework\TestCase;
 use RuntimeLLC\Mongo\DataSet;
 use RuntimeLLC\Mongo\EntityManager;
-use RuntimeLLC\Mongo\IEntityManager;
 use RuntimeLLC\Mongo\Mapper;
 use RuntimeLLC\ODMTests\Resources\AddressEntity;
 use RuntimeLLC\ODMTests\Resources\BadManager;
@@ -638,7 +637,8 @@ class EntityManagerTest extends TestCase
 	public function testFindOneAndReplaceFail()
 	{
 		$this->expectException(exception: \MongoDB\Driver\Exception\InvalidArgumentException::class);
-		$this->expectErrorMessage('First key in $replacement argument is an update operator');
+//		$this->expectErrorMessage('First key in $replacement argument is an update operator');
+		$this->expectExceptionMessage('First key in $replacement is an update operator');
 
 		$this->createPerson(name: "Petr");
 
@@ -728,7 +728,8 @@ class EntityManagerTest extends TestCase
 	public function testFindOneAndUpdateFail()
 	{
 		$this->expectException(exception: \MongoDB\Driver\Exception\InvalidArgumentException::class);
-		$this->expectErrorMessage("Expected an update document with operator as first key or a pipeline");
+//		$this->expectErrorMessage("Expected an update document with operator as first key or a pipeline");
+		$this->expectExceptionMessage("Expected update operator(s) or non-empty pipeline for \$update");
 
 		$this->createPerson(name: "Petr");
 		$saved = $this->pm->findOneAndUpdate(
